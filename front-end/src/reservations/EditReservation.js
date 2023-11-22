@@ -1,72 +1,96 @@
-import { useEffect, useState } from "react";
-import { useHistory, useParams } from "react-router";
-import ErrorAlert from "../layout/ErrorAlert";
+import React, { useEffect, useState } from "react";
+import { useHistory, useParams } from "react-router-dom";
 import { readReservation, updateReservation } from "../utils/api";
-import formatReservationTime from "../utils/format-reservation-time";
+import ErrorAlert from "../layout/ErrorAlert";
 import ReservationForm from "./ReservationForm";
-import validateDate from "./validateDate";
 
-export default function EditRes({ reservations, setReservations }) {
+function EditReservation() {
+  const initialFormState = {
+    first_name: "",
+    last_name: "",
+    mobile_number: "",
+    reservation_date: "",
+    reservation_time: "",
+    people: "",
+    status: "",
+  };
+
+  const params = useParams();
+  const reservation_id = params.reservation_id;
   const history = useHistory();
-  const { reservation_id } = useParams();
 
-  const [reservation, setReservation] = useState({});
-  const [errorAlerts, setErrorAlerts] = useState([]);
+  const [reservationError, setReservationError] = useState(null);
+  const [formData, setFormData] = useState({ ...initialFormState });
+  const [errorAlert, setErrorAlert] = useState(null);
 
-  useEffect(() => {
+  //load reservation
+  useEffect(loadReservation, [reservation_id]);
+
+  function loadReservation() {
     const abortController = new AbortController();
+    setReservationError(null);
     readReservation(reservation_id, abortController.signal)
-      .then(setReservation)
-      .catch(setErrorAlerts);
-    return () => abortController.abort();
-  }, [reservation_id]);
-
-  function handleSubmit(updatedRes) {
-    const abortController = new AbortController();
-    setErrorAlerts([]);
-    if (validateDate(updatedRes, setErrorAlerts)) {
-      updateReservation(
-        formatReservationTime(updatedRes),
-        abortController.signal
+      .then((data) =>
+        setFormData({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          mobile_number: data.mobile_number,
+          reservation_date: data.reservation_date.slice(0, 10),
+          reservation_time: data.reservation_time.slice(0, 5),
+          people: data.people,
+          status: data.status,
+        })
       )
-        .then(() =>
-          history.push(`/dashboard?date=${updatedRes.reservation_date}`)
-        )
-        .catch((e) => {
-          setErrorAlerts(e);
-        });
-      return () => abortController.abort();
-    }
+
+      .catch(setReservationError);
+    return () => abortController.abort();
   }
 
-  function cancelHandler() {
-    history.goBack();
-  }
-  let errors;
-  if (errorAlerts.length >= 1) {
-    errors = errorAlerts.map((error, i) => {
-      return (
-        <div key={i}>
-          <ErrorAlert error={error} />
-        </div>
+  //handlers
+
+  const changeHandler = ({ target }) => {
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      [target.name]: target.value,
+    }));
+  };
+
+  const submitHandler = async (event) => {
+    event.preventDefault();
+    setErrorAlert(null);
+    const abortController = new AbortController();
+    try {
+      const response = await updateReservation(
+        reservation_id,
+        formData,
+        abortController.signal
       );
-    });
-  }
+      history.push(
+        `/dashboard/?date=${response.reservation_date.slice(0, 10)}`
+      );
+    } catch (error) {
+      setErrorAlert(error);
+    }
+  };
 
-  const child = reservation.reservation_id ? (
-    <ReservationForm
-      initialState={{ ...reservation }}
-      handleCancel={cancelHandler}
-      handleSubmit={handleSubmit}
-    />
-  ) : (
-    <p>Loading...</p>
-  );
   return (
     <main>
-      <h1 className="font-weight-bold d-flex justify-content-center mt-4">Edit Reservation</h1>
-      {errors}
-      {child}
+      <div>
+        <h1>Edit Reservation</h1>
+      </div>
+      <div>
+        <ErrorAlert error={errorAlert} /> 
+        <ErrorAlert error={reservationError} />
+      </div>
+      <div>
+        <ReservationForm
+          formData={formData}
+          changeHandler={changeHandler}
+          submitHandler={submitHandler}
+        />
+      </div>
     </main>
   );
 }
+
+export default EditReservation;

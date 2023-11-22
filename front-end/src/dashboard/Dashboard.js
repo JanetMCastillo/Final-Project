@@ -1,166 +1,121 @@
-import React from "react";
-import { useHistory } from "react-router-dom";
-import { previous, next, today } from "../utils/date-time";
+import React, { useEffect, useState } from "react";
+import {
+  listReservations,
+  listTables,
+  finishTable,
+  changeReservationStatus,
+} from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert";
-import TableRow from "./TableRow";
-import ReservationRow from "./ReservationRow";
-
+import ReservationList from "../dashboard/ReservationList"
+import useQuery from "../utils/useQuery";
+import { today } from "../utils/date-time";
+import { previous, next } from "../utils/date-time";
+import { Link, useHistory } from "react-router-dom";
+import TableList from "../dashboard/TableList"
 
 /**
  * Defines the dashboard page.
+ * @param date
+ *  the date for which the user wants to view reservations.
+ * @returns {JSX.Element}
  */
-function Dashboard({
-  date,
-  reservations,
-  reservationsError,
-  tables,
-  tablesError,
-}) {
-
+function Dashboard() {
   const history = useHistory();
+  const [reservations, setReservations] = useState([]);
+  const [reservationsError, setReservationsError] = useState(null);
+  const [tables, setTables] = useState([]);
+  const [tablesError, setTablesError] = useState([]);
+  const [cancelError, setCancelError] = useState(null);
 
-
-  /** iterates each reservation and returns a 'ReservationRow' */
-  const reservationsJSX = () => {
-    return reservations.map((reservation) => (
-      <ReservationRow
-        key={reservation.reservation_id}
-        reservation={reservation}
-      />
-    ));
-  };
-
-
-  /** iterates each table and returns a 'TableRow' */
-  const tablesJSX = () => {
-    return tables.map((table) => (
-      <TableRow
-        key={table.table_id}
-        table={table}
-      />
-    ));
-  };
-
-
-   /** uses:
-     * previous() to set the reservations' list date to be the previous day
-     * next() to set the reservations' list date to be the following day
-     * today() to set reservation's list date to current day
-    */
-  function handleClick({ target }) {
-    let newDate;
-    let useDate;
-
-    if (!date) {
-      useDate = today();
-    } else {
-      useDate = date;
-    }
-
-    if (target.name === "previous") {
-      newDate = previous(useDate);
-    } else if (target.name === "next") {
-      newDate = next(useDate);
-    } else {
-      newDate = today();
-    }
-
-    history.push(`/dashboard?date=${newDate}`);
+  //If date is not given, should preform get request with today's date.
+  let date = today();
+  const query = useQuery().get("date");
+  if (query) {
+    date = query;
   }
 
+  useEffect(loadDashboard, [date]);
+
+  //load reservations and tables
+
+  function loadDashboard() {
+    const abortController = new AbortController();
+    setReservationsError(null);
+    setTablesError(null);
+    listReservations({ date }, abortController.signal)
+      .then(setReservations)
+      .catch(setReservationsError);
+    listTables(abortController.signal).then(setTables).catch(setTablesError);
+    return () => abortController.abort();
+  }
+
+  //handler for finish button
+
+  async function finishHandler({ table_id, reservation_id }) {
+    const confirmationWindow = window.confirm(
+      "Is this table ready to seat new guests? This cannot be undone."
+    );
+    if (confirmationWindow) {
+      try {
+        await finishTable(table_id);
+        await changeReservationStatus(reservation_id, "finished");
+      } catch (error) {
+        setTablesError([error]);
+      }
+
+      history.push("/");
+    }
+  }
+
+  async function cancelHandler({ reservation_id }) {
+    const confirmationWindow = window.confirm(
+      "Do you want to cancel this reservation? This cannot be undone."
+    );
+    if (confirmationWindow) {
+      try {
+        await changeReservationStatus(reservation_id, "cancelled");
+      } catch (error) {
+
+        setCancelError([error]);
+      }
+
+      history.push("/");
+    }
+  }
 
   return (
     <main>
-      <div
-        
-        style={{ fontFamily: "Arial", height: "100vh" }}
-      >
-      
-        <div >
-          <h1 className="d-flex justify-content-center mt-5 mb-4">Dashboard</h1>
-
-          <div className="mt-4 mb-4 d-flex justify-content-center">
-            <button
-              className="btn btn-xs btn-dark btn-outline-light mx-3 px-3"
-              // className="btn-xs rounded-pill shadow-none border-style-none btn-white mx-3 px-2 text-black"
-              type="button"
-              name="previous"
-              onClick={handleClick}
-            >
-              Previous
-            </button>
-            <button
-              className="btn btn-xs btn-dark btn-outline-light mx-3 px-3"
-              type="button"
-              name="today"
-              onClick={handleClick}
-            >
-              Today
-            </button>
-            <button
-              className="btn btn-xs btn-dark btn-outline-light mx-3 px-3"
-              type="button"
-              name="next"
-              onClick={handleClick}
-            >
-              Next
-            </button>
-          </div>
-
-          <h4 className="mt-4 font-weight-bold d-flex justify-content-center mb-2">
-            {date}
-          </h4>
-
-          <h4 className="mb-4 mt-4 pl-1 font-weight-bold">Reservations</h4>
-
-          <ErrorAlert error={reservationsError} />
-
-          
-          <table className="table text-wrap text-center table-hover">
-            <thead className="thead-dark">
-              <tr className="text-center">
-                <th scope="col">ID</th>
-                <th scope="col">First Name</th>
-                <th scope="col">Last Name</th>
-                <th scope="col">Mobile Number</th>
-                <th scope="col">Date</th>
-                <th scope="col">Time</th>
-                <th scope="col">People</th>
-                <th scope="col">Status</th>
-                <th scope="col">Edit</th>
-                <th scope="col">Cancel</th>
-                <th scope="col">Seat</th>
-              </tr>
-            </thead>
-            <tbody>{reservationsJSX()}</tbody>
-          </table>
-
-          <br />
-          <br />
-
-          <h4 className="mb-4 pl-1 font-weight-bold">Tables</h4>
-
-          <ErrorAlert error={tablesError} />
-
-          <table className="table table-hover m-1 text-nowrap mb-4">
-            <thead className="thead-dark">
-              <tr className="text-center">
-                <th scope="col">Table ID</th>
-                <th scope="col">Table Name</th>
-                <th scope="col">Capacity</th>
-                <th scope="col">Status</th>
-                <th scope="col">Reservation ID</th>
-                <th scope="col">Finish</th>
-              </tr>
-            </thead>
-            <tbody>{tablesJSX()}</tbody>
-          </table>
-
-        </div>
+      <h1>Dashboard</h1>
+      <div className="d-md-flex mb-3">
+        <h4 className="mb-0">Reservations for date</h4>
       </div>
+      <div className="container">
+        <Link
+          to={`/dashboard/?date=${previous(date)}`}
+          className="btn btn-dark"
+        >
+          Previous
+        </Link>
+        <Link to={`/dashboard`} className="btn btn-light">
+          Today
+        </Link>
+        <Link to={`/dashboard/?date=${next(date)}`} className="btn btn-dark">
+          Next
+        </Link>
+      </div>
+      <br />
+      <ErrorAlert error={reservationsError} />
+      <ErrorAlert error={tablesError} />
+      <ErrorAlert error={cancelError} />
+      <ReservationList
+        reservations={reservations}
+        date={date}
+        cancelHandler={cancelHandler}
+      />
+      <br />
+      <TableList tables={tables} finishHandler={finishHandler} />
     </main>
   );
 }
-
 
 export default Dashboard;

@@ -1,31 +1,29 @@
 import React, { useState } from "react";
-import TableForm from "./TableForm";
-import { createTable } from "../utils/api";
+import ReservationForm from "./ReservationForm";
+import { createReservation } from "../utils/api";
 import { useHistory } from "react-router-dom";
 import ErrorAlert from "../layout/ErrorAlert";
 
-function NewTable() {
+function NewReservation() {
   const history = useHistory();
 
   const initialFormState = {
-    table_name: "",
-    capacity: "1",
+    first_name: "",
+    last_name: "",
+    mobile_number: "",
+    reservation_date: "",
+    reservation_time: "",
+    people: "1",
+    status: "booked",
   };
   const [formData, setFormData] = useState({ ...initialFormState });
   const [errorAlert, setErrorAlert] = useState(false);
 
   //Handlers
-  const changeHandlerName = ({ target }) => {
+  const changeHandler = ({ target }) => {
     setFormData((currentFormData) => ({
       ...currentFormData,
       [target.name]: target.value,
-    }));
-  };
-
-  const changeHandlerCapacity = ({ target }) => {
-    setFormData((currentFormData) => ({
-      ...currentFormData,
-      [target.name]: Number(target.value),
     }));
   };
 
@@ -33,8 +31,13 @@ function NewTable() {
     event.preventDefault();
     const abortController = new AbortController();
     try {
-      await createTable(formData, abortController.signal);
-      history.push(`/dashboard`);
+      const response = await createReservation(
+        formData,
+        abortController.signal
+      );
+      history.push(
+        `/dashboard/?date=${response.reservation_date.slice(0, 10)}`
+      );
     } catch (error) {
       setErrorAlert(error);
     }
@@ -42,14 +45,13 @@ function NewTable() {
   return (
     <div>
       <div>
-        <h1>New Table</h1>
+        <h1>New Reservation</h1>
       </div>
       <div>
         <ErrorAlert error={errorAlert} />
-        <TableForm
+        <ReservationForm
           formData={formData}
-          changeHandlerName={changeHandlerName}
-          changeHandlerCapacity={changeHandlerCapacity}
+          changeHandler={changeHandler}
           submitHandler={submitHandler}
         />
       </div>
@@ -57,4 +59,4 @@ function NewTable() {
   );
 }
 
-export default NewTable;
+export default NewReservation;
