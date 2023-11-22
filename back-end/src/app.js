@@ -12,10 +12,19 @@ const tablesRouter = require("./tables/tables.router");
 
 const app = express();
 
+
 app.use(cors());
-// app.options("*", cors());
+
 app.use(express.json());
 
+const router = express.Router();
+router.get("/", cors(), (req, res) => {
+  res.json({
+    message: "You can access the data using these routes:",
+  });
+});
+
+app.use("/", router);
 app.use("/reservations", reservationsRouter);
 app.use("/tables", tablesRouter);
 
