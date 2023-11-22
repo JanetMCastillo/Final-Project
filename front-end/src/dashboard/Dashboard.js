@@ -1,83 +1,166 @@
 import React from "react";
-import { getDisplayDate } from "../utils/date-time"
+import { useHistory } from "react-router-dom";
+import { previous, next, today } from "../utils/date-time";
 import ErrorAlert from "../layout/ErrorAlert";
-import Buttons from "./Buttons";
-import DisplayReservation from "../reservations/DisplayReservation";
-import DisplayTable from "../tables/DisplayTable";
+import TableRow from "./TableRow";
+import ReservationRow from "./ReservationRow";
 
 
 /**
  * Defines the dashboard page.
- * @param date
- *  the date for which the user wants to view reservations.
- * @returns {JSX.Element}
  */
+function Dashboard({
+  date,
+  reservations,
+  reservationsError,
+  tables,
+  tablesError,
+}) {
 
-// {JSON.stringify(reservations)}
+  const history = useHistory();
 
-function Dashboard({ date, setDate, reservations, reservationsError, tables, tablesError, loadDashboard }) {
-  
-  // display date formatted as Friday, January 1, 2021
-  const displayDate = getDisplayDate(date);
 
-  // iterates each reservation and calls 'DisplayReservation' to display a single reservation
+  /** iterates each reservation and returns a 'ReservationRow' */
   const reservationsJSX = () => {
     return reservations.map((reservation) => (
-      <DisplayReservation
+      <ReservationRow
         key={reservation.reservation_id}
         reservation={reservation}
-        loadDashboard={loadDashboard}
       />
-    ))
+    ));
   };
 
 
+  /** iterates each table and returns a 'TableRow' */
   const tablesJSX = () => {
     return tables.map((table) => (
-      <DisplayTable
+      <TableRow
         key={table.table_id}
         table={table}
-        loadDashboard={loadDashboard}
       />
-    ))
+    ));
   };
 
+
+   /** uses:
+     * previous() to set the reservations' list date to be the previous day
+     * next() to set the reservations' list date to be the following day
+     * today() to set reservation's list date to current day
+    */
+  function handleClick({ target }) {
+    let newDate;
+    let useDate;
+
+    if (!date) {
+      useDate = today();
+    } else {
+      useDate = date;
+    }
+
+    if (target.name === "previous") {
+      newDate = previous(useDate);
+    } else if (target.name === "next") {
+      newDate = next(useDate);
+    } else {
+      newDate = today();
+    }
+
+    history.push(`/dashboard?date=${newDate}`);
+  }
 
 
   return (
     <main>
-      <h1 className="text-center">Dashboard</h1>
-
-      <div className="text-center">
-        <h3 className="text-center">{displayDate}</h3>
-      </div>
-
-      <div className="text-center">
-          <Buttons date={date} setDate={setDate} />
-      </div>
-
-      <ErrorAlert error={reservationsError} />
-      <ErrorAlert error={tablesError} />
+      <div
+        
+        style={{ fontFamily: "Arial", height: "100vh" }}
+      >
       
-      <div>
-        <h3>Reservations:</h3>
-        <div>
-          <div>{reservationsJSX()}</div>
-          <div className="text-center">
-            {reservations.length === 0 && (
-              <h5 className="text-center row flex-column bg-light border rounded-lg mx-1 my-3 px-2 py-2">There are no reservations for today</h5>
-            )}
+        <div >
+          <h1 className="d-flex justify-content-center mt-5 mb-4">Dashboard</h1>
+
+          <div className="mt-4 mb-4 d-flex justify-content-center">
+            <button
+              className="btn btn-xs btn-dark btn-outline-light mx-3 px-3"
+              // className="btn-xs rounded-pill shadow-none border-style-none btn-white mx-3 px-2 text-black"
+              type="button"
+              name="previous"
+              onClick={handleClick}
+            >
+              Previous
+            </button>
+            <button
+              className="btn btn-xs btn-dark btn-outline-light mx-3 px-3"
+              type="button"
+              name="today"
+              onClick={handleClick}
+            >
+              Today
+            </button>
+            <button
+              className="btn btn-xs btn-dark btn-outline-light mx-3 px-3"
+              type="button"
+              name="next"
+              onClick={handleClick}
+            >
+              Next
+            </button>
           </div>
+
+          <h4 className="mt-4 font-weight-bold d-flex justify-content-center mb-2">
+            {date}
+          </h4>
+
+          <h4 className="mb-4 mt-4 pl-1 font-weight-bold">Reservations</h4>
+
+          <ErrorAlert error={reservationsError} />
+
+          
+          <table className="table text-wrap text-center table-hover">
+            <thead className="thead-dark">
+              <tr className="text-center">
+                <th scope="col">ID</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">Mobile Number</th>
+                <th scope="col">Date</th>
+                <th scope="col">Time</th>
+                <th scope="col">People</th>
+                <th scope="col">Status</th>
+                <th scope="col">Edit</th>
+                <th scope="col">Cancel</th>
+                <th scope="col">Seat</th>
+              </tr>
+            </thead>
+            <tbody>{reservationsJSX()}</tbody>
+          </table>
+
+          <br />
+          <br />
+
+          <h4 className="mb-4 pl-1 font-weight-bold">Tables</h4>
+
+          <ErrorAlert error={tablesError} />
+
+          <table className="table table-hover m-1 text-nowrap mb-4">
+            <thead className="thead-dark">
+              <tr className="text-center">
+                <th scope="col">Table ID</th>
+                <th scope="col">Table Name</th>
+                <th scope="col">Capacity</th>
+                <th scope="col">Status</th>
+                <th scope="col">Reservation ID</th>
+                <th scope="col">Finish</th>
+              </tr>
+            </thead>
+            <tbody>{tablesJSX()}</tbody>
+          </table>
+
         </div>
       </div>
-
-      <div className="mt-5">
-        <h3>Tables:</h3>
-        <div>{tablesJSX()}</div>
-      </div>
-      
     </main>
   );
 }
+
 
 export default Dashboard;

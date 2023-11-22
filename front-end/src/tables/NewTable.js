@@ -1,24 +1,18 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-// import ErrorAlert from "../layout/ErrorAlert";
 import { createTable } from "../utils/api";
 
 
-// Returns a 'NewTable' form to create a new table that sits an entered quantity
 export default function NewTable({ loadDashboard }) {
-
-
   const history = useHistory();
 
-  // const [error, setError] = useState([]);
-  /** sets initial state of a table */
+  const [error, setError] = useState([]);
   const [formData, setFormData] = useState({
     table_name: "",
     capacity: "",
   });
 
 
-  /* sets table info when entered */
   function handleChange({ target }) {
     setFormData({
       ...formData,
@@ -28,7 +22,6 @@ export default function NewTable({ loadDashboard }) {
   }
 
 
-  /* saves table info and redirects to dashboard when form is submitted */
   function handleSubmit(event) {
     event.preventDefault();
     const abortController = new AbortController();
@@ -36,8 +29,8 @@ export default function NewTable({ loadDashboard }) {
     if (validateFields()) {
       createTable(formData, abortController.signal)
         .then(loadDashboard)
-        .then(() => history.push(`/dashboard`));
-        // .catch(setError);
+        .then(() => history.push(`/dashboard`))
+        .catch(setError);
     }
 
     return () => abortController.abort();
@@ -60,65 +53,65 @@ export default function NewTable({ loadDashboard }) {
       };
     }
 
-    // setError(foundError);
+    setError(foundError);
     return foundError === null;
   }
 
 
-
   return (
-    <div className='row justify-content-center'>
-        <form className='col-lg-10' onSubmit={handleSubmit}>
-            <h1 className='text-center py-4'>New Table</h1>
-            {/* <ErrorAlert error={error} /> */}
-            <div className='form-group'>
-                <label htmlFor="table_name">Table Name</label>
-                <input
-                    name="table_name"
-                    id="table_name"
-                    className="form-control"
-                    type="text"
-                    minLength="2"
-                    onChange={handleChange}
-                    value={formData.table_name}
-                    placeholder="Enter table name"
-                    required
-                />
-            </div>
+    <div >
+      <h2 className="font-weight-bold d-flex justify-content-center mt-4">
+        New Table
+      </h2>
+      <div className="d-flex justify-content-center mt-4">
+        <form className="font-weight-bold mt-2 w-75">
+          {/* <ErrorAlert error={error} /> */}
 
-            <div className='form-group'>
-                <label htmlFor="capacity">Table Capacity</label>
-                <input
-                    name="capacity"
-                    id="capacity"
-                    placeholder='Enter seating capacity'
-                    className="form-control"
-                    type="number"
-                    // min="1"
-                    onChange={handleChange}
-                    value={formData.capacity}
-                    required
-                />
-            </div>
+          <label htmlFor="table_name">Table Name&nbsp;</label>
+          <input
+            name="table_name"
+            id="table_name"
+            className="form-control mb-3 border-dark"
+            type="text"
+            minLength="2"
+            onChange={handleChange}
+            value={formData.table_name}
+            required
+          />
 
-            <div className='form-group'>
-                <button
-                    className="btn btn-xs btn-dark btn-outline-light w-10"
-                    type="submit"
-                >
-                    Submit
-                </button>
+          <label htmlFor="capacity">Capacity&nbsp;</label>
+          <input
+            name="capacity"
+            id="capacity"
+            className="form-control mb-3 border-dark"
+            type="number"
+            min="1"
+            onChange={handleChange}
+            value={formData.capacity}
+            required
+            style={{ color: "black" }}
+          />
 
-                <button
-                    className="btn btn-xs btn-cancel text-dark btn-outline-light mx-2 w-10"
-                    type="button"
-                    onClick={history.goBack}
-                >
-                    Cancel
-                </button>
-            </div>
-
+          <div className="d-flex justify-content-center mt-4">
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              className="btn btn-outline-light m-1"
+              style={{ color: "white" }}
+            >
+              Submit
+            </button>
+            <button
+              className="btn btn-outline-light m-1"
+              type="button"
+              onClick={history.goBack}
+            >
+              Cancel
+            </button>
+          </div>
+          
         </form>
+      </div>
     </div>
   );
 }

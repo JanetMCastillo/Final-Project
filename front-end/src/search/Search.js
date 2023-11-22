@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { useHistory } from "react-router-dom";
 import ErrorAlert from "../layout/ErrorAlert";
 import { listReservations } from "../utils/api";
-import DisplayReservation from "../reservations/DisplayReservation";
+import ReservationRow from "../dashboard/ReservationRow";
 
 /**
  * Search component allows the user to search for a specific reservation
@@ -13,7 +12,6 @@ export default function Search() {
   const [mobileNumber, setMobileNumber] = useState("");
   const [reservations, setReservations] = useState([]);
   const [error, setError] = useState(null);
-  const history = useHistory();
 
   /**
    * updates the state of mobileNumber when the user makes any changes to it
@@ -37,24 +35,32 @@ export default function Search() {
 
   /** returns all reservation(s), if any */
   const searchResultsJSX = () => {
-    return reservations.map((reservation) => (
-      <DisplayReservation
-        key={reservation.reservation_id}
-        reservation={reservation}
-        // date={date}
-      />
-    ))
+    return reservations.length > 0 ? (
+      reservations.map((reservation) => (
+        <ReservationRow
+          key={reservation.reservation_id}
+          reservation={reservation}
+        />
+      ))
+    ) : (
+      <tr>
+        <td className="text-light">No reservations found</td>
+      </tr>
+    );
   };
 
   return (
-    <div className='row justify-content-center'>
-      <h1 className='text-center py-4'>Search Reservations</h1>
-
-      <form className='col-lg-10'>
+    <div
+      className="w-80 ml-2 pr-4 mr-4 pt-4"
+    >
+      <h1 className="font-weight-bold d-flex justify-content-center mt-4 mb-4 pb-4">
+        Search
+      </h1>
+      <form>
         <ErrorAlert error={error} />
-        <div className='form-group'>
+        <div className="input-group w-50">
           <input
-            className='form-control'
+            className="form-control mr-2 border-dark rounded"
             name="mobile_number"
             id="mobile_number"
             type="tel"
@@ -64,28 +70,43 @@ export default function Search() {
             required
           />
           <button
-            className="btn btn-xs btn-dark btn-outline-light mt-4 w-10"
+            className="btn-xs btn-outline-0 btn-outline-dark rounded px-2 pb-1"
             type="submit"
             onClick={handleSubmit}
           >
-            Find
-          </button>
-          <button
-            className="btn btn-xs btn-cancel text-dark btn-outline-light mt-4 mx-2 w-10"
-            type="button"
-            onClick={history.goBack}
-          >
-                    Cancel
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              className="bi bi-search"
+              viewBox="0 0 16 16"
+            >
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+            </svg>
           </button>
         </div>
-      
-        <div>{searchResultsJSX()}</div>
-        <div className="text-center">
-            {reservations.length === 0 && (
-              <h5 className='text-white mt-3'>No reservations found</h5>
-            )}
-          </div>
-        </form>
+      </form>
+
+      <table className="table table-hover mt-4">
+        <thead className="thead-dark">
+          <tr className="text-center">
+            <th scope="col">ID</th>
+            <th scope="col text-center">First Name</th>
+            <th scope="col text-center">Last Name</th>
+            <th scope="col text-center">Mobile Number</th>
+            <th scope="col">Date</th>
+            <th scope="col">Time</th>
+            <th scope="col">People</th>
+            <th scope="col">Status</th>
+            <th scope="col">Edit</th>
+            <th scope="col">Cancel</th>
+            <th scope="col">Seat</th>
+          </tr>
+        </thead>
+
+        <tbody>{searchResultsJSX()}</tbody>
+      </table>
     </div>
   );
 }

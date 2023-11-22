@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Redirect,
-  Route,
-  Switch,
-  useHistory,
-  useLocation,
+import {Redirect,Route,Switch,useHistory,useLocation,
 } from "react-router-dom";
 import NotFound from "./NotFound";
 import useQuery from "../utils/useQuery";
@@ -18,7 +13,6 @@ import EditReservation from "../reservations/EditReservation";
 import CreateReservation from "../reservations/CreateReservation";
 
 
-/** defines all the routes for the application */
 function Routes() {
   const [reservations, setReservations] = useState([]);
   const [tables, setTables] = useState([]);

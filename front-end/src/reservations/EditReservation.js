@@ -1,88 +1,72 @@
-import React, { useEffect, useState } from "react";
-import { useHistory, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useHistory, useParams } from "react-router";
 import ErrorAlert from "../layout/ErrorAlert";
-import { updateReservation, readReservation } from "../utils/api";
-import { validateDate, validateFields }from "./validateDate";
+import { readReservation, updateReservation } from "../utils/api";
+import formatReservationTime from "../utils/format-reservation-time";
 import ReservationForm from "./ReservationForm";
+import validateDate from "./validateDate";
 
-
-
-// Displays a Reservation Form used to create or edit a reservation
-const EditReservation = ({ loadDashboard }) => {
-
+export default function EditRes({ reservations, setReservations }) {
   const history = useHistory();
   const { reservation_id } = useParams();
 
   const [reservation, setReservation] = useState({});
-
-  // const [errors, setErrors] = useState([]);
-  const [reservationError, setReservationError] = useState(null);
-  const [errors, setErrors] = useState([]);
-  const [apiError, setApiError] = useState(null);
-  
-
-
+  const [errorAlerts, setErrorAlerts] = useState([]);
 
   useEffect(() => {
     const abortController = new AbortController();
-    setReservationError(null);
     readReservation(reservation_id, abortController.signal)
       .then(setReservation)
-      .catch(setReservationError);
+      .catch(setErrorAlerts);
     return () => abortController.abort();
   }, [reservation_id]);
 
-
-
-  function handleSubmit(sumbmittedFormData) {
+  function handleSubmit(updatedRes) {
     const abortController = new AbortController();
-    const foundErrors = [];
-
-    if (validateDate(sumbmittedFormData, foundErrors) && validateFields(sumbmittedFormData, foundErrors)) {
-
-        updateReservation(reservation_id, sumbmittedFormData, abortController.signal)
-          .then(loadDashboard)
-          .then(() =>
-            history.push(`/dashboard?date=${sumbmittedFormData.reservation_date}`)
-          )
-          .catch(setApiError);
+    setErrorAlerts([]);
+    if (validateDate(updatedRes, setErrorAlerts)) {
+      updateReservation(
+        formatReservationTime(updatedRes),
+        abortController.signal
+      )
+        .then(() =>
+          history.push(`/dashboard?date=${updatedRes.reservation_date}`)
+        )
+        .catch((e) => {
+          setErrorAlerts(e);
+        });
+      return () => abortController.abort();
     }
-    setErrors(foundErrors);
-    return () => abortController.abort();
-  };
+  }
 
-
-
-  const errorsJSX = () => {
-    return errors.map((error, idx) => <ErrorAlert key={idx} error={error} />);
-  };
-
+  function cancelHandler() {
+    history.goBack();
+  }
+  let errors;
+  if (errorAlerts.length >= 1) {
+    errors = errorAlerts.map((error, i) => {
+      return (
+        <div key={i}>
+          <ErrorAlert error={error} />
+        </div>
+      );
+    });
+  }
 
   const child = reservation.reservation_id ? (
     <ReservationForm
       initialState={{ ...reservation }}
+      handleCancel={cancelHandler}
       handleSubmit={handleSubmit}
     />
   ) : (
     <p>Loading...</p>
   );
-
-
-
   return (
     <main>
-        <h1 className='text-center py-4'>Edit Reservation</h1>
-
-        {errorsJSX()}
-        <ErrorAlert error={apiError} />
-        <ErrorAlert error={reservationError} />
-
-        {child}
-
+      <h1 className="font-weight-bold d-flex justify-content-center mt-4">Edit Reservation</h1>
+      {errors}
+      {child}
     </main>
-  )
-
+  );
 }
-
-
-export default EditReservation;
