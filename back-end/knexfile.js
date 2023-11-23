@@ -8,7 +8,7 @@ require('dotenv').config();
 const path = require("path");
 
 const {
-  DATABASE_URL="postgres://lxfbvwmt:crVPvOfv0kc0Ae4wwdefXImelmq4D7w0@bubble.db.elephantsql.com/lxfbvwmt",
+  DATABASE_URL="postgres://wnblgbji:gZsM6d3Wq4WYhYYyzwWGPfj-pDCA2zWi@bubble.db.elephantsql.com/wnblgbji",
   DATABASE_URL_DEVELOPMENT= "postgres://lxfbvwmt:crVPvOfv0kc0Ae4wwdefXImelmq4D7w0@bubble.db.elephantsql.com/lxfbvwmt",
   DATABASE_URL_TEST="postgres://aanmwkaf:PyJhqQzjcnXP7OTc2v-Ve5HuvAbofUa6@bubble.db.elephantsql.com/aanmwkaf",
   DATABASE_URL_PREVIEW="postgres://wcqsxyig:9VIiQmawdEiiyM-HnYV4qI7BhIyJRiBy@bubble.db.elephantsql.com/wcqsxyig",
