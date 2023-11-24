@@ -49,6 +49,9 @@
   "author": "Thinkful, Inc.",
   "license": "UNLICENSED",
   "dependencies": {
-    "puppeteer": "^21.5.2"
+    "puppeteer": "^21.5.2",
+    "dotenv": "^16.0.1",
+    "knex": "^2.1.0",
+    "cors": "^2.8.5"
   }
 }
