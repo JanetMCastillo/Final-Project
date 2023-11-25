@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom/cjs/react-router-dom.min";
+import { Link } from "react-router-dom"
 
 function ReservationList({ reservations, date, cancelHandler }) {
   const displayReservations = reservations.map((reservation, index) => {
@@ -25,13 +25,13 @@ function ReservationList({ reservations, date, cancelHandler }) {
             {reservation.status !== "booked" ? null : (
               <>
                 <Link
-                  href={`/reservations/${reservation.reservation_id}/seat`}
+                  to={`/reservations/${reservation.reservation_id}/seat`}
                   className="btn btn-outline-primary mx-1"
                 >
                   Seat
                 </Link>
                 <Link
-                  href={`/reservations/${reservation.reservation_id}/edit`}
+                to={`/reservations/${reservation.reservation_id}/edit`}
                   className="btn btn-outline-primary mx-1"
                 >
                   Edit
